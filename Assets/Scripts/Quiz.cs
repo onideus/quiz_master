@@ -1,8 +1,10 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using Random = UnityEngine.Random;
 
 public class Quiz : MonoBehaviour
 {
@@ -14,7 +16,7 @@ public class Quiz : MonoBehaviour
     [Header("Answers")] 
     [SerializeField] GameObject[] answerButtons;
     private int _correctAnswerIndex;
-    private bool _hasAnsweredEarly;
+    private bool _hasAnsweredEarly = true;
 
     [Header("Button Colors")] 
     [SerializeField] private Sprite defaultAnswerSprite;
@@ -23,17 +25,39 @@ public class Quiz : MonoBehaviour
     [Header("Timer")] 
     [SerializeField] private Image timerImage;
     private Timer _timer;
+    
+    [Header("Scoring")]
+    [SerializeField] private TextMeshProUGUI scoreText;
+    private ScoreKeeper _scoreKeeper;
+    
+    [Header("Progress Bar")]
+    [SerializeField] Slider progressBar;
 
-    void Start()
+    public bool isComplete;
+
+    private void Awake()
     {
         _timer = FindObjectOfType<Timer>();
+        _scoreKeeper = FindObjectOfType<ScoreKeeper>();
+    }
+    
+    private void Start()
+    {
+        progressBar.maxValue = questions.Count;
+        progressBar.value = 0;
     }
 
-    void Update()
+    private void Update()
     {
         timerImage.fillAmount = _timer.fillFraction;
         if (_timer.loadNextQuestion)
         {
+            if (progressBar.value == progressBar.maxValue)
+            {
+                isComplete = true;
+                return;
+            }
+            
             _hasAnsweredEarly = false;
             GetNextQuestion();
             _timer.loadNextQuestion = false;
@@ -51,9 +75,10 @@ public class Quiz : MonoBehaviour
         DisplayAnswer(index);
         SetButtonState(false);
         _timer.CancelTimer();
+        scoreText.text = $"Score: {_scoreKeeper.CalculateScore()}%";
     }
 
-    void DisplayAnswer(int index)
+    private void DisplayAnswer(int index)
     {
         Image buttonImage;
 
@@ -62,6 +87,7 @@ public class Quiz : MonoBehaviour
             questionText.text = "Correct!";
             buttonImage = answerButtons[index].GetComponent<Image>();
             buttonImage.sprite = correctAnswerSprite;
+            _scoreKeeper.IncrementCorrectAnswers();
         }
         else
         {
@@ -80,6 +106,8 @@ public class Quiz : MonoBehaviour
             SetDefaultButtonSprites();
             GetRandomQuestion();
             DisplayQuestion();
+            progressBar.value++;
+            _scoreKeeper.IncrementQuestionsSeen();
         }
     }
 

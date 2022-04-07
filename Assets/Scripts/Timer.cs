@@ -13,7 +13,7 @@ public class Timer : MonoBehaviour
     public bool isAnsweringQuestion;
     private float _timeRemaining;
     
-    void Update()
+    private void Update()
     {
         UpdateTimer();
     }
@@ -23,7 +23,7 @@ public class Timer : MonoBehaviour
         _timeRemaining = 0;
     }
     
-    void UpdateTimer()
+    private void UpdateTimer()
     {
         _timeRemaining -= Time.deltaTime;
 
